@@ -155,13 +155,14 @@ If you use **GPUMD-PySAGES** in your research, please cite **all three** package
 ### GPUMD (the MD engine)
 
 ```bibtex
-@article{fan2017gpumd,
-  title={{GPUMD}: A {GPU}-based molecular dynamics package},
-  author={Fan, Zheyong and Zhan, Haikuan},
-  journal={{Mater. Sci. Eng.}},
-  volume={7},
-  pages={1--8},
-  year={2017},
+@article{xu2025gpumd,
+  title={{GPUMD} 4.0: A high-performance molecular dynamics package for versatile materials simulations with machine-learned potentials},
+  author={Xu, Ke and Bu, Hongyu and Pan, Shiyue and Lindgren, Erik and Wu, Yue and Wang, Yong and Liu, Ji and Song, Kunpeng and Xu, Bingyu and Li, Yangzhuo and Hainer, Tobias and Svensson, Linnea and Wiktor, Julia and Zhao, Runzi and Huang, Hao and Qian, Chenxi and Zhang, Shuo and Zeng, Zezhu and Zhang, Bowen and others},
+  journal={Mater. Genome Eng. Adv.},
+  volume={3},
+  number={3},
+  pages={e70028},
+  year={2025},
   publisher={Wiley},
   doi={10.1002/mgea.70028}
 }
