@@ -108,14 +108,14 @@ Benchmarked on ethane (8 atoms, NEP4, 1M steps, RTX 3090):
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  PySAGES (JAX)                                              │
-│  ├─ Collective Variables (Python / JAX)                    │
+│  ├─ Collective Variables (Python / JAX)                     │
 │  ├─ Bias computation (GPU, float64)                         │
 │  └─ run() orchestration                                     │
 ├─────────────────────────────────────────────────────────────┤
-│  GPUMD-PySAGES Backend (pysages_backend/gpumd.py)          │
+│  GPUMD-PySAGES Backend (pysages_backend/gpumd.py)           │
 │  ├─ Snapshot from DLPack (zero-copy)                        │
 │  ├─ Cached constants (ids, masses, box for NVT)             │
-│  └─ _update() registered as GPUMD step callback           │
+│  └─ _update() registered as GPUMD step callback             │
 ├─────────────────────────────────────────────────────────────┤
 │  pybind11 Wrapper (wrapper/gpumd_python.cpp)                │
 │  ├─ DLPack capsules for positions/forces/velocities         │
@@ -124,7 +124,7 @@ Benchmarked on ethane (8 atoms, NEP4, 1M steps, RTX 3090):
 ├─────────────────────────────────────────────────────────────┤
 │  GPUMD Engine (C++ / CUDA)                                  │
 │  ├─ force.compute()                                         │
-│  ├─ step_callback()  ← PySAGES hook                       │
+│  ├─ step_callback()  ← PySAGES hook                         │
 │  └─ integrate.compute2()                                    │
 └─────────────────────────────────────────────────────────────┘
 ```
