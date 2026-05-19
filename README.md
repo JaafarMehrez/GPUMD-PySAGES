@@ -88,8 +88,7 @@ with pysages.SamplingContext(method, lambda: sim) as ctx:
 ```
 
 See `examples/` for complete tutorials:
-- `example_ethane_dihedral.py` — Metadynamics of ethane H-C-C-H dihedral
-- `example_ethane_dihedral_wt.py` — Well-tempered metadynamics
+- `ethane-metad.py` — Well-tempered metadynamics of ethane H-C-C-H dihedral
 - `diagnose_timing.py` — Profile the interface overhead
 
 ## Performance
@@ -103,7 +102,6 @@ Benchmarked on ethane (8 atoms, NEP4, 1M steps, RTX 3090):
 | Bias apply (custom CUDA kernel) | ~0.10 ms |
 | **Total interface overhead** | **~0.77 ms** |
 
-For 5M steps, the total runtime is **~1.15×** that of GPUMD+PLUMED — essentially the same speed with the flexibility of JAX autodiff and Python-defined collective variables.
 
 ## Architecture
 
@@ -140,9 +138,22 @@ For 5M steps, the total runtime is **~1.15×** that of GPUMD+PLUMED — essentia
 
 ## Citation
 
-If you use this interface in your research, please cite both GPUMD and PySAGES:
+If you use **GPUMD-PySAGES** in your research, please cite **all three** packages:
 
-**GPUMD:**
+### GPUMD-PySAGES (this interface)
+
+```bibtex
+@software{mehrez2025gpumdpysages,
+  title={GPUMD-PySAGES: A {GPU}-native interface between {GPUMD} and {PySAGES} for enhanced-sampling molecular dynamics},
+  author={Mehrez, Jaafar},
+  year={2025},
+  url={https://github.com/JaafarMehrez/GPUMD-PySAGES},
+  note={GPU-native bridge enabling JAX-based enhanced sampling on GPUMD with zero-copy DLPack array exchange}
+}
+```
+
+### GPUMD (the MD engine)
+
 ```bibtex
 @article{fan2017gpumd,
   title={{GPUMD}: A {GPU}-based molecular dynamics package},
@@ -156,7 +167,8 @@ If you use this interface in your research, please cite both GPUMD and PySAGES:
 }
 ```
 
-**PySAGES:**
+### PySAGES (the sampling framework)
+
 ```bibtex
 @software{pysages2022,
   title={PySAGES: {P}ython {S}uite for {A}dvanced {G}eneralized-{E}nsemble {S}imulations},
@@ -181,4 +193,4 @@ jaafarmehrez@sjtu.edu.cn | jaafar@hpqc.org
 
 ## Acknowledgments
 
-This interface was developed in collaboration with the GPUMD and PySAGES development teams. Special thanks to Zheyong Fan (GPUMD) for the suggestion to release this as a standalone package.
+Special thanks to Zheyong Fan (GPUMD) for the suggestion to release this as a standalone package.
