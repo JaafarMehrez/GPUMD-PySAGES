@@ -147,10 +147,9 @@ gnep: $(OBJ_GNEP)
 	@echo =================================================
 
 
-# ---- pygpumd: Python extension module for PySAGES integration ----
-# NOTE: run "make clean" before "make pygpumd" if you previously built
-# the standard gpumd executable, because this target adds -DUSE_PYSAGES
-# to CFLAGS and the object files must be recompiled.
+############################################################
+#pygpumd: Python extension module for PySAGES integration 
+############################################################
 PYGPUMD_SRC = main_gpumd/gpumd_python.cpp
 
 ifdef OS
@@ -159,17 +158,13 @@ else
 PYGPUMD_OBJ = $(PYGPUMD_SRC:.cpp=.o)
 endif
 
-# Exclude main.cu (contains int main) from the shared library.
 PY_OBJ_GPUMD = $(filter-out %/main.o %/main.obj,$(OBJ_GPUMD)) $(PYGPUMD_OBJ)
 
-# Enable PYSAGES hooks in the GPUMD core when building the Python module.
 pygpumd: CFLAGS += -DUSE_PYSAGES
 pygpumd: $(PY_OBJ_GPUMD)
 ifdef OS
 	@echo Windows Python module build not yet implemented in makefile.
 else
-	# Link with CUDA runtime (-lcudart) and set RPATH so Python can find
-	# the libraries at load time without needing LD_LIBRARY_PATH.
 	g++ -shared -fPIC $(LDFLAGS) $^ -o gpumd.so \
 	  -L$(CUDA_LIB) -Wl,-rpath,$(CUDA_LIB) \
 	  $(LIBS) -lcudart $(PYTHON_LDFLAGS)
@@ -177,8 +172,6 @@ else
 	@echo The gpumd Python module is successfully compiled!
 	@echo =================================================
 endif
-# -----------------------------------------------------------------
-
 
 ###########################################################
 # rules for building object files
@@ -229,10 +222,6 @@ main_nep/%.o: main_nep/%.cu $(HEADERS)
 	$(CC) $(CFLAGS) $(INC) -c $< -o $@
 main_gnep/%.o: main_gnep/%.cu $(HEADERS)
 	$(CC) $(CFLAGS) $(INC) -c $< -o $@
-
-# Compile the pybind11 wrapper with the host C++ compiler.
-# Do NOT pass $(CFLAGS) here — it contains nvcc-only flags (-arch, -Xcompiler).
-# We add -DUSE_PYSAGES explicitly so the wrapper sees the callback members.
 main_gpumd/%.o: main_gpumd/%.cpp $(HEADERS)
 	g++ -std=c++14 -O3 -fPIC -DUSE_PYSAGES $(PYBIND11_INC) $(PYTHON_CFLAGS) -I$(CUDA_INC) $(INC) -c $< -o $@
 endif

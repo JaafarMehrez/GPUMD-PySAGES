@@ -3,7 +3,7 @@
 
     Declarations for CUDA kernels used by the GPUMD pybind11 wrapper.
 
-    Copyright 2025 Jaafar Mehrez
+    Copyright 2026 Jaafar Mehrez
     (Shanghai Jiao Tong University, Shanghai, China;
      HPQC Labs, Waterloo, Canada;
      jaafarmehrez@sjtu.edu.cn, jaafar@hpqc.org)

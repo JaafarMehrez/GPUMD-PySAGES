@@ -8,7 +8,7 @@
     the GPUMD object files to produce a loadable Python module named
     ``gpumd``.
 
-    Copyright 2025 Jaafar Mehrez
+    Copyright 2026 Jaafar Mehrez
     (Shanghai Jiao Tong University, Shanghai, China;
      HPQC Labs, Waterloo, Canada;
      jaafarmehrez@sjtu.edu.cn, jaafar@hpqc.org)
@@ -16,10 +16,6 @@
     SPDX-License-Identifier: MIT
 */
 
-// IMPORTANT: All CUDA / standard library headers must come BEFORE any
-// GPUMD .cuh file.  The GPUMD headers use CUDA host types (cudaError_t,
-// __global__, etc.) that are only visible when cuda_runtime.h has been
-// processed first.
 #include <cuda_runtime.h>
 
 #include <cctype>   // std::tolower
@@ -38,13 +34,7 @@
 
 namespace py = pybind11;
 
-// ---------------------------------------------------------------------------
 // Helper: wrap a GPU_Vector as a DLPack capsule.
-//
-// The capsule owns a small DLManagedTensor wrapper but does NOT own the
-// underlying GPU memory (GPUMD does).  When the consumer (JAX) calls the
-// deleter, we only free the wrapper struct.
-// ---------------------------------------------------------------------------
 template <typename T>
 py::capsule gpu_vector_to_dlpack(
   T* data,
@@ -53,13 +43,6 @@ py::capsule gpu_vector_to_dlpack(
   DLDataTypeCode type_code,
   uint8_t bits)
 {
-  // Build shape / strides so that the tensor is in compact C-order,
-  // which JAX/XLA accepts without the "non-default layout" error.
-  //
-  // GPUMD stores per-atom vectors in SOA layout:
-  //   [x0..xN-1, y0..yN-1, z0..zN-1]
-  // This is compact C-order when viewed as shape (3, N) with strides (N, 1).
-  // The PySAGES backend will transpose back to (N, 3) via .T.
   int ndim = (components > 1) ? 2 : 1;
   int64_t* shape = new int64_t[ndim];
   int64_t* strides = new int64_t[ndim];
@@ -74,13 +57,10 @@ py::capsule gpu_vector_to_dlpack(
   }
 
   auto* manager = new DLManagedTensor;
-  // Zero the struct to avoid garbage in padding bytes that JAX might read.
   std::memset(manager, 0, sizeof(DLManagedTensor));
   manager->dl_tensor.data = static_cast<void*>(data);
   manager->dl_tensor.device = DLDevice{kDLCUDA, 0};
   manager->dl_tensor.ndim = ndim;
-  // Explicitly set each field of DLDataType to avoid C++ brace-init issues
-  // with enum + mixed-size integer fields.
   manager->dl_tensor.dtype.code = static_cast<uint8_t>(type_code);
   manager->dl_tensor.dtype.bits = bits;
   manager->dl_tensor.dtype.lanes = 1;
@@ -93,20 +73,12 @@ py::capsule gpu_vector_to_dlpack(
     delete[] self->dl_tensor.strides;
     delete self;
   };
-
-  // Return a pybind11 capsule with the DLPack protocol name.
-  // pybind11 will call the capsule destructor when the Python object
-  // is garbage-collected, but the *real* cleanup happens via the
-  // DLManagedTensor deleter after JAX (or another consumer) calls it.
   py::capsule cap(manager, "dltensor", [](PyObject* /*capsule*/) {
-    // No-op: JAX is responsible for calling the DLManagedTensor deleter.
   });
   return cap;
 }
 
-// ---------------------------------------------------------------------------
 // Convenience overloads for the common GPUMD types.
-// ---------------------------------------------------------------------------
 py::capsule dlpack_from_double_vector(double* data, int64_t n, int64_t comp = 1)
 {
   return gpu_vector_to_dlpack(data, n, comp, kDLFloat, 64);
@@ -117,14 +89,9 @@ py::capsule dlpack_from_int_vector(int* data, int64_t n, int64_t comp = 1)
   return gpu_vector_to_dlpack(data, n, comp, kDLInt, 32);
 }
 
-// ---------------------------------------------------------------------------
 // PySimulation: high-level wrapper exposed to Python.
-// ---------------------------------------------------------------------------
 class PySimulation
 {
-  // Heap-allocate Run so there is exactly one owner.  Copying Run
-  // (which contains GPU_Vector with raw CUDA pointers) would cause a
-  // double-free when the copy's destructor also calls gpuFree.
   std::unique_ptr<Run> run_;
   std::string run_input_path_;
 
@@ -132,38 +99,23 @@ public:
   explicit PySimulation(const std::string& run_input_path = "run.in")
     : run_input_path_(run_input_path)
   {
-    // Construct GPUMD in "skip-run" mode so that run.in is parsed but
-    // perform_a_run() is not executed immediately.
     run_ = std::make_unique<Run>(true, run_input_path);
-
-    // Synchronize to ensure allocations are done before Python touches them.
     cudaDeviceSynchronize();
   }
 
-  // -----------------------------------------------------------------------
   // Query whether the simulation box is guaranteed to remain constant.
-  //
-  // This reads the run.in file and checks for keywords that modify the box
-  // (npt ensemble, change_box, puff).  If none are found, the box is
-  // treated as constant for the entire run, allowing the PySAGES backend
-  // to skip per-step box refreshes.
-  // -----------------------------------------------------------------------
   bool is_box_constant() const
   {
     std::ifstream file(run_input_path_);
     if (!file.is_open()) {
-      // If we cannot read the file, be conservative and assume the box
-      // may change (NPT / etc.).
       return false;
     }
     std::string line;
     while (std::getline(file, line)) {
-      // Skip comments and blank lines.
       auto first_non_space = line.find_first_not_of(" \t\r\n");
       if (first_non_space == std::string::npos) continue;
       if (line[first_non_space] == '#') continue;
 
-      // Check for box-changing keywords (case-insensitive).
       std::string lower;
       for (char c : line) lower += std::tolower(c);
 
@@ -174,9 +126,7 @@ public:
     return true;
   }
 
-  // -----------------------------------------------------------------------
   // DLPack accessors (zero-copy views into GPUMD GPU memory)
-  // -----------------------------------------------------------------------
   py::capsule get_positions_dlpack()
   {
     return dlpack_from_double_vector(
@@ -217,24 +167,19 @@ public:
       1);
   }
 
-  // -----------------------------------------------------------------------
   // Box & timestep
-  // -----------------------------------------------------------------------
   py::tuple get_box()
   {
-    // GPUMD stores the 3x3 affine transform in cpu_h[0..8] (row-major).
     py::list h(9);
     for (int i = 0; i < 9; ++i) {
       h[i] = run_->get_box().cpu_h[i];
     }
-    // GPUMD does not store an explicit origin; it is always (0,0,0).
     py::tuple origin = py::make_tuple(0.0, 0.0, 0.0);
     return py::make_tuple(h, origin);
   }
 
   double get_timestep() const
   {
-    // GPUMD internal natural time units.
     return run_->get_time_step();
   }
 
@@ -243,17 +188,13 @@ public:
     return run_->get_atom().number_of_atoms;
   }
 
-  // -----------------------------------------------------------------------
   // Callback registration
-  // -----------------------------------------------------------------------
   void set_step_callback(std::function<void(int)> cb)
   {
     run_->step_callback = cb;
   }
 
-  // -----------------------------------------------------------------------
   // Execution
-  // -----------------------------------------------------------------------
   void run(int steps)
   {
     run_->set_number_of_steps(steps);
@@ -265,12 +206,7 @@ public:
     cudaDeviceSynchronize();
   }
 
-  // -----------------------------------------------------------------------
   // Direct bias write (optional)
-  //
-  // Accepts a DLPack capsule from Python (e.g. a CuPy array) and copies
-  // its contents into GPUMD's external_bias_per_atom buffer.
-  // -----------------------------------------------------------------------
   void set_external_bias(py::capsule dlpack_cap)
   {
     DLManagedTensor* dlm = static_cast<DLManagedTensor*>(dlpack_cap.get_pointer());
@@ -292,7 +228,6 @@ public:
       throw std::runtime_error("Bias tensor size mismatch");
     }
 
-    // Validate dtype: GPUMD forces are double, so we need float64 bias
     if (dt.dtype.code != static_cast<uint8_t>(kDLFloat) || dt.dtype.bits != 64) {
       char msg[128];
       snprintf(
@@ -309,16 +244,9 @@ public:
       dt.data,
       expected * sizeof(double),
       cudaMemcpyDeviceToDevice);
-
-    // NOTE: We do NOT call dlm->deleter here. JAX's to_dlpack() capsule
-    // already has a capsule destructor that calls the deleter when the
-    // Python capsule object is garbage-collected. Calling it manually would
-    // cause a double-free / use-after-free and segfault.
   }
 
-  // -----------------------------------------------------------------------
-  // Zero the external bias buffer.
-  // -----------------------------------------------------------------------
+  // Zero the external bias buffer
   void clear_external_bias()
   {
     int64_t n = run_->external_bias_per_atom.size();
@@ -327,12 +255,7 @@ public:
     }
   }
 
-  // -----------------------------------------------------------------------
-  // Direct in-place bias add via custom CUDA kernel.
-  //
-  // Replaces the old two-step path (set_external_bias + gpu_add_external_bias)
-  // with a single kernel that adds an AOS bias directly to SOA forces.
-  // -----------------------------------------------------------------------
+  // Direct in-place bias add via custom CUDA kernel
   void add_aos_bias_to_forces(py::capsule dlpack_cap)
   {
     DLManagedTensor* dlm = static_cast<DLManagedTensor*>(dlpack_cap.get_pointer());
@@ -376,9 +299,7 @@ public:
   }
 };
 
-// ---------------------------------------------------------------------------
 // Module definition
-// ---------------------------------------------------------------------------
 PYBIND11_MODULE(gpumd, m)
 {
   m.doc() = "GPUMD Python wrapper for PySAGES integration";

@@ -143,10 +143,10 @@ If you use **GPUMD-PySAGES** in your research, please cite **all three** package
 ### GPUMD-PySAGES (this interface)
 
 ```bibtex
-@software{mehrez2025gpumdpysages,
+@software{mehrez2026gpumdpysages,
   title={GPUMD-PySAGES: A {GPU}-native interface between {GPUMD} and {PySAGES} for enhanced-sampling molecular dynamics},
   author={Mehrez, Jaafar},
-  year={2025},
+  year={2026},
   url={https://github.com/JaafarMehrez/GPUMD-PySAGES},
   note={GPU-native bridge enabling JAX-based enhanced sampling on GPUMD with zero-copy DLPack array exchange}
 }

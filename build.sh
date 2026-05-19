@@ -40,7 +40,7 @@ cp "$GPUMD_DIR/src/main_gpumd/run.cuh"       "$GPUMD_DIR/src/main_gpumd/run.cuh.
 cp "$GPUMD_DIR/src/main_gpumd/run.cu"        "$GPUMD_DIR/src/main_gpumd/run.cu.bak"
 cp "$GPUMD_DIR/src/utilities/gpu_vector.cuh" "$GPUMD_DIR/src/utilities/gpu_vector.cuh.bak"
 cp "$GPUMD_DIR/src/makefile"                 "$GPUMD_DIR/src/makefile.bak"
-echo "  ✓ Backups created (*.bak)"
+echo "  Backups created (*.bak)"
 
 # --- Step 2: Copy modified GPUMD core files ---
 echo ""
@@ -49,7 +49,7 @@ cp "$SCRIPT_DIR/gpumd_patches/run.cuh"       "$GPUMD_DIR/src/main_gpumd/"
 cp "$SCRIPT_DIR/gpumd_patches/run.cu"        "$GPUMD_DIR/src/main_gpumd/"
 cp "$SCRIPT_DIR/gpumd_patches/gpu_vector.cuh" "$GPUMD_DIR/src/utilities/"
 cp "$SCRIPT_DIR/gpumd_patches/makefile"       "$GPUMD_DIR/src/"
-echo "  ✓ Core files updated"
+echo "  Core files updated"
 
 # --- Step 3: Copy wrapper files ---
 echo ""
@@ -58,7 +58,7 @@ cp "$SCRIPT_DIR/wrapper/gpumd_python.cpp"       "$GPUMD_DIR/src/main_gpumd/"
 cp "$SCRIPT_DIR/wrapper/gpumd_python_kernels.cu"  "$GPUMD_DIR/src/main_gpumd/"
 cp "$SCRIPT_DIR/wrapper/gpumd_python_kernels.cuh" "$GPUMD_DIR/src/main_gpumd/"
 cp "$SCRIPT_DIR/wrapper/dlpack.h"                 "$GPUMD_DIR/src/main_gpumd/"
-echo "  ✓ Wrapper files copied"
+echo "  Wrapper files copied"
 
 # --- Step 4: Build the Python extension ---
 echo ""
