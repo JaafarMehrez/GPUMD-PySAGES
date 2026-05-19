@@ -1,0 +1,14 @@
+--- /Users/jmhrzz/HPQC/ForkedRepo/GPUMD/src/main_gpumd/run.cuh	2026-05-13 11:48:23.465129470 +0800
++++ /Users/jmhrzz/HPQC/ForkedRepo/R5-D5/GPUMD/src/main_gpumd/run.cuh	2026-05-12 15:45:19.125338055 +0800
+@@ -11,6 +11,11 @@
+     GNU General Public License for more details.
+     You should have received a copy of the GNU General Public License
+     along with GPUMD.  If not, see <http://www.gnu.org/licenses/>.
++
++    Contributions by Jaafar Mehrez
++    (Shanghai Jiao Tong University, Shanghai, China;
++     HPQC Labs, Waterloo, Canada;
++     jaafarmehrez@sjtu.edu.cn, jaafar@hpqc.org)
+ */
+ 
+ #pragma once
