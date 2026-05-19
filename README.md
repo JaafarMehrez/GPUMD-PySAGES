@@ -170,11 +170,15 @@ If you use **GPUMD-PySAGES** in your research, please cite **all three** package
 ### PySAGES (the sampling framework)
 
 ```bibtex
-@software{pysages2022,
-  title={PySAGES: {P}ython {S}uite for {A}dvanced {G}eneralized-{E}nsemble {S}imulations},
-  author={{PySAGES Development Team}},
-  year={2022},
-  url={https://github.com/SSAGESLabs/PySAGES}
+@article{zubieta2024pysages,
+  title={PySAGES: flexible, advanced sampling methods accelerated with {GPUs}},
+  author={Zubieta Rico, Pablo F. and Schneider, Ludwig and P{\'e}rez-Lemus, Gustavo R. and Alessandri, Riccardo and Dasetty, Siva and Nguyen, Trung D. and Men{\'e}ndez, Cintia A. and Wu, Yiheng and Jin, Yezhi and Xu, Yinan and Varner, Samuel and Parker, John A. and Ferguson, Andrew L. and Whitmer, Jonathan K. and de Pablo, Juan J.},
+  journal={npj Comput. Mater.},
+  volume={10},
+  pages={35},
+  year={2024},
+  publisher={Nature Publishing Group},
+  doi={10.1038/s41524-023-01189-z}
 }
 ```
 
