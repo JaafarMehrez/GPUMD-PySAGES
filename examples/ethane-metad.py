@@ -16,7 +16,7 @@ https://chem.libretexts.org/Courses/Athabasca_University/...
 Before running:
 1. Build gpumd.so:   cd GPUMD/src && make pygpumd
 2. Ensure gpumd.so is on PYTHONPATH
-3. Have a GPUMD simulation directory with run.in and model.xyz
+3. Have a GPUMD simulation directory with run.in, model.xyz, and NEP potential
 
 Usage:
     python ethane-metad.py

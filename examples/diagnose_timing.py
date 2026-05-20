@@ -13,7 +13,7 @@ the per-step timing breakdown from the backend.
 Usage:
     python diagnose_timing.py /path/to/gpumd/simulation
 
-The directory must contain run.in and model.xyz.
+The directory must contain run.in, model.xyz and NEP potential.
 """
 
 import os
