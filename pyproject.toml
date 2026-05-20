@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gpumd-pysages"
+dynamic = ["version"]
+description = "GPU-native interface between GPUMD and PySAGES"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Jaafar Mehrez", email = "jaafarmehrez@sjtu.edu.cn"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Physics",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "jax[cuda]>=0.4.0",
+    "cupy-cuda11x>=11.0.0",
+    "pysages>=0.3.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "black", "flake8"]
+
+[project.urls]
+Homepage = "https://github.com/JaafarMehrez/GPUMD-PySAGES"
+Repository = "https://github.com/JaafarMehrez/GPUMD-PySAGES"
+
+[project.scripts]
+gpumd-pysages-install = "gpumd_pysages.install:main"
+
+[tool.setuptools_scm]
+write_to = "gpumd_pysages/_version.py"

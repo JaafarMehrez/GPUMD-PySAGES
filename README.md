@@ -7,7 +7,7 @@ A GPU-native interface between [GPUMD](https://github.com/brucefan1983/GPUMD) an
 This package bridges GPUMD (a highly efficient GPU MD engine) with PySAGES (a JAX-based enhanced-sampling framework). It enables:
 
 - **Metadynamics**, **ABF**, **Umbrella Sampling**, and all PySAGES methods on GPUMD simulations.
-- **Zero-copy GPU↔GPU** data exchange via DLPack — no host↔device transfers.
+- **Zero-copy GPU-to-GPU** data exchange via DLPack — no host-to-device transfers.
 - **Native GPU execution** of collective-variable and bias computations via JAX.
 - **NEP potentials** — run enhanced sampling on GPUMD's neural-network potentials with full GPU acceleration.
 
