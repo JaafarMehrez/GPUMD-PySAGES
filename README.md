@@ -25,7 +25,7 @@ This package bridges GPUMD (a highly efficient GPU MD engine) with PySAGES (a JA
 
 ### Step 1 — Install GPUMD
 
-Clone and build GPUMD from source (do **not** run `make pygpumd` yet):
+Clone and build GPUMD from source:
 
 ```bash
 git clone https://github.com/brucefan1983/GPUMD.git
