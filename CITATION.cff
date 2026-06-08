@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Mehrez
+    given-names: Jaafar
+    orcid: https://orcid.org/0000-0002-4784-7052
+title: "GPUMD-PySAGES: A GPU-native interface between GPUMD and PySAGES for enhanced-sampling molecular dynamics"
+version: 1.0.0
+date-released: 2026-06-08
+url: "https://github.com/JaafarMehrez/GPUMD-PySAGES"
