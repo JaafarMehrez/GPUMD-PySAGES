@@ -14,7 +14,7 @@ This package bridges GPUMD (a highly efficient GPU MD engine) with PySAGES (a JA
 
 ## Dependencies
 
-- [GPUMD](https://github.com/brucefan1983/GPUMD) (tested with v3.x / v5.x)
+- [GPUMD](https://github.com/brucefan1983/GPUMD) (current master / v5.x — the interface targets the refactored codebase that uses `measure/` actions)
 - [PySAGES](https://github.com/SSAGESLabs/PySAGES)
 - Python ≥ 3.8
 - pybind11
@@ -48,18 +48,26 @@ pip install -e .
 git clone https://github.com/JaafarMehrez/GPUMD-PySAGES.git
 cd GPUMD-PySAGES
 
-# Option A: Apply patches to an existing GPUMD clone and build the wrapper
+# Option A: Build with the provided script (recommended)
 ./build.sh /path/to/GPUMD
 
-# Option B: Manual patching
+# Option B: Manual — copy the modified GPUMD core files and build the wrapper
 cd /path/to/GPUMD/src
-patch -p2 < /path/to/GPUMD-PySAGES/patches/01-run-cuh.patch
-patch -p2 < /path/to/GPUMD-PySAGES/patches/02-run-cu.patch
-patch -p2 < /path/to/GPUMD-PySAGES/patches/03-gpu_vector-cuh.patch
-patch -p2 < /path/to/GPUMD-PySAGES/patches/04-makefile.patch
 
-# Copy wrapper files into GPUMD source
-cp /path/to/GPUMD-PySAGES/wrapper/* /path/to/GPUMD/src/main_gpumd/
+# Backup the original files
+cp main_gpumd/run.cuh       main_gpumd/run.cuh.bak
+cp main_gpumd/run.cu        main_gpumd/run.cu.bak
+cp utilities/gpu_vector.cuh utilities/gpu_vector.cuh.bak
+cp makefile                 makefile.bak
+
+# Copy the modified GPUMD core files (complete files, see gpumd_patches/)
+cp /path/to/GPUMD-PySAGES/gpumd_patches/run.cuh        main_gpumd/
+cp /path/to/GPUMD-PySAGES/gpumd_patches/run.cu         main_gpumd/
+cp /path/to/GPUMD-PySAGES/gpumd_patches/gpu_vector.cuh utilities/
+cp /path/to/GPUMD-PySAGES/gpumd_patches/makefile       .
+
+# Copy the pybind11 wrapper files into the GPUMD source
+cp /path/to/GPUMD-PySAGES/wrapper/* main_gpumd/
 
 # Build the Python extension module
 make pygpumd
