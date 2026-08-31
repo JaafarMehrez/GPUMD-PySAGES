@@ -24,14 +24,8 @@ class Force;
 class Integrate;
 class Measure;
 
-#include "add_efield.cuh"
-#include "add_force.cuh"
-#include "add_spring.cuh"
-#include "add_random_force.cuh"
-#include "electron_stop.cuh"
 #include "force/force.cuh"
 #include "integrate/integrate.cuh"
-#include "mc/mc.cuh"
 #include "measure/measure.cuh"
 #include "model/atom.cuh"
 #include "model/box.cuh"
@@ -50,9 +44,10 @@ class Run
 {
 public:
   Run();
-  Run(bool skip_run, const std::string& run_input_file);
 
 #ifdef USE_PYSAGES
+  Run(bool skip_run, const std::string& run_input_path);
+
   // ---- PySAGES / external-sampling hook ----
   // If set, called every timestep from within perform_a_run(),
   // after all force computations and before integrate.compute2().
@@ -62,7 +57,6 @@ public:
   // contents are added to atom.force_per_atom every step.
   GPU_Vector<double> external_bias_per_atom;
   // ------------------------------------------
-#endif
 
   // Accessors for Python wrapper
   Atom& get_atom() { return atom; }
@@ -75,10 +69,12 @@ public:
 
   // Execute the MD loop (callable from Python after set_number_of_steps)
   void execute_run();
+#endif
 
 private:
   void execute_run_in();
   void perform_a_run();
+  void compute_force();
   void parse_one_keyword(std::vector<std::string>& tokens);
 
   // keyword parsing functions
@@ -89,8 +85,10 @@ private:
   void parse_time_step(const char** param, int num_param);
   void parse_run(const char** param, int num_param);
 
+#ifdef USE_PYSAGES
   bool skip_run_commands = false;
   std::string run_input_file = "run.in";
+#endif
 
   int number_of_types; // number of atom types
   int has_velocity_in_xyz = 0;
@@ -107,11 +105,5 @@ private:
 
   Force force;
   Integrate integrate;
-  MC mc;
   Measure measure;
-  Electron_Stop electron_stop;
-  Add_Force add_force;
-  Add_Spring add_spring;
-  Add_Random_Force add_random_force;
-  Add_Efield add_efield;
 };

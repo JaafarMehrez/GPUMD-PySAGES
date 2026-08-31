@@ -16,16 +16,26 @@
 ###########################################################
 CC = nvcc
 CUDA_ARCH=-arch=sm_60
+WARN_FLAGS = -Wall -Wextra
+WARN_FLAGS += -Wno-sign-compare -Wno-unused-parameter
+WARN_FLAGS += -Wnull-dereference -Wstringop-overflow -Wstringop-truncation -Wrestrict
+WARN_FLAGS += -Wduplicated-cond -Wduplicated-branches -Wlogical-op
+WARN_FLAGS += -Wsequence-point -Wswitch-default
+WARN_FLAGS += -Wcast-align -Wcast-qual -Wvla
+WARN_FLAGS += -Wformat -Wformat-security -Wformat-overflow -Wformat-truncation
 ifdef OS # For Windows with the cl.exe compiler
 CFLAGS = -O3 $(CUDA_ARCH)
 else # For linux
-CFLAGS = -std=c++14 -O3 $(CUDA_ARCH) -Xcompiler -fPIC
+# -fPIC is required so that the nvcc-compiled objects can be linked into the
+# shared Python extension module (gpumd.so) by the pygpumd target.
+CFLAGS = -std=c++14 -O3 $(CUDA_ARCH) -Xcompiler="$(WARN_FLAGS)" -Xcompiler -fPIC
 endif
 INC = -I./
 LDFLAGS = 
 LIBS = -lcublas -lcusolver -lcufft
 
 # ---- Python / pybind11 configuration (for pygpumd target) ----
+PYGPUMD_SRC = main_gpumd/gpumd_python.cpp
 PYBIND11_INC  := $(shell python3 -m pybind11 --includes 2>/dev/null)
 PYTHON_CFLAGS := $(shell python3-config --cflags 2>/dev/null)
 PYTHON_LDFLAGS:= $(shell python3-config --ldflags --embed 2>/dev/null)
@@ -35,41 +45,22 @@ ifeq ($(PYTHON_CFLAGS),)
   PYTHON_LDFLAGS = -lpython3
 endif
 # CUDA include path: needed because run.cuh transitively includes
-# headers (e.g. add_random_force.cuh) that require curand_kernel.h.
-# nvcc 11.x does not support --print-search-dirs, so we check common paths.
-ifneq ($(wildcard /usr/local/cuda-11.6/include/curand_kernel.h),)
-  CUDA_INC := /usr/local/cuda-11.6/include
-else ifneq ($(wildcard /usr/local/cuda-11.7/include/curand_kernel.h),)
-  CUDA_INC := /usr/local/cuda-11.7/include
-else ifneq ($(wildcard /usr/local/cuda-11.8/include/curand_kernel.h),)
-  CUDA_INC := /usr/local/cuda-11.8/include
-else ifneq ($(wildcard /usr/local/cuda-12.2/include/curand_kernel.h),)
-  CUDA_INC := /usr/local/cuda-12.2/include
-else ifneq ($(wildcard /usr/local/cuda/include/curand_kernel.h),)
+# headers that require curand_kernel.h.
+ifneq ($(wildcard /usr/local/cuda/include/curand_kernel.h),)
   CUDA_INC := /usr/local/cuda/include
 else
-  # last resort: user must override
-  CUDA_INC := /usr/local/cuda/targets/x86_64-linux/include
+  CUDA_INC ?= /usr/local/cuda/targets/x86_64-linux/include
 endif
 # CUDA library path: needed for linking cublas, cusolver, cufft, cudart
-# nvcc 11.x does not support --print-search-dirs, so we rely on pkg-config
-# or a set of common CUDA install paths.
 CUDA_LIB := $(shell \
   pkg-config --libs cuda 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($$i ~ /^-L/) print substr($$i,3)}' | head -1 || \
   echo '/usr/local/cuda/targets/x86_64-linux/lib')
-# As a fallback, check known CUDA 11.x locations
-ifneq ($(wildcard $(CUDA_LIB)/libcusolver.so),)
-  # path is valid
-else ifneq ($(wildcard /usr/local/cuda-11.6/targets/x86_64-linux/lib/libcusolver.so),)
-  CUDA_LIB := /usr/local/cuda-11.6/targets/x86_64-linux/lib
-else ifneq ($(wildcard /usr/local/cuda-11.7/targets/x86_64-linux/lib/libcusolver.so),)
-  CUDA_LIB := /usr/local/cuda-11.7/targets/x86_64-linux/lib
-else ifneq ($(wildcard /usr/local/cuda-12.2/targets/x86_64-linux/lib/libcusolver.so),)
-  CUDA_LIB := /usr/local/cuda-12.2/targets/x86_64-linux/lib
-else ifneq ($(wildcard /usr/local/cuda/lib64/libcusolver.so),)
-  CUDA_LIB := /usr/local/cuda/lib64
-else
-  # last resort: user must override
+ifeq ($(wildcard $(CUDA_LIB)/libcusolver.so),)
+  ifneq ($(wildcard /usr/local/cuda/lib64/libcusolver.so),)
+    CUDA_LIB := /usr/local/cuda/lib64
+  else
+    CUDA_LIB ?= /usr/local/cuda/targets/x86_64-linux/lib
+  endif
 endif
 # --------------------------------------------------------------
 
@@ -150,8 +141,6 @@ gnep: $(OBJ_GNEP)
 ############################################################
 #pygpumd: Python extension module for PySAGES integration 
 ############################################################
-PYGPUMD_SRC = main_gpumd/gpumd_python.cpp
-
 ifdef OS
 PYGPUMD_OBJ = $(PYGPUMD_SRC:.cpp=.obj)
 else
@@ -172,6 +161,7 @@ else
 	@echo The gpumd Python module is successfully compiled!
 	@echo =================================================
 endif
+
 
 ###########################################################
 # rules for building object files
