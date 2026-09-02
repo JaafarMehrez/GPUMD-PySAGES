@@ -71,14 +71,8 @@ make pygpumd
 echo ""
 echo "Step 5/5: Installing PySAGES backend..."
 cd "$SCRIPT_DIR"
-
-# Importing pysages imports jax, which probes the CUDA driver at import time.
-# On a GPU-less login/head node that probe fails with CUDA_ERROR_NO_DEVICE and
-# is harmless, but it produces scary-looking messages; hide the GPUs so JAX
-# falls back to its CPU backend during the install.
-export CUDA_VISIBLE_DEVICES=""
 pip install -e . > /dev/null 2>&1 || pip install -e .
-python -m gpumd_pysages.install --yes
+python -m gpumd_pysages.install
 
 echo ""
 echo "=========================================="

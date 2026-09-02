@@ -9,7 +9,6 @@ import sys
 
 def main():
     """Copy gpumd.py into pysages.backends."""
-    force = "--yes" in sys.argv or "-y" in sys.argv
     try:
         import pysages
     except ImportError:
@@ -34,15 +33,12 @@ def main():
         sys.exit(1)
 
     if os.path.exists(backend_dst):
-        if force:
-            print(f"Overwriting existing backend at {backend_dst}")
-        else:
-            print(f"GPUMD backend already installed at {backend_dst}")
-            print("Overwrite? [y/N] ", end="")
-            response = input().strip().lower()
-            if response != "y":
-                print("Aborted.")
-                sys.exit(0)
+        print(f"GPUMD backend already installed at {backend_dst}")
+        print("Overwrite? [y/N] ", end="")
+        response = input().strip().lower()
+        if response != "y":
+            print("Aborted.")
+            sys.exit(0)
 
     shutil.copy2(backend_src, backend_dst)
     print(f"Successfully installed GPUMD backend to {backend_dst}")
