@@ -3,5 +3,5 @@ velocity      300
 
 ensemble      nvt_lan 300 300 200
 time_step     0.5
-dump_thermo   1000
-dump_position 5000
+dump_thermo   100
+dump_xyz      100 forces.xyz precision double force
