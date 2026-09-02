@@ -45,6 +45,35 @@ except ImportError as err:
         "Please build and install the GPUMD pybind11 wrapper."
     ) from err
 
+# kDLCUDA as defined in <dlpack.h>.
+_GPUMD_DL_DEVICE_TYPE = 2
+_GPUMD_DL_DEVICE_ID = 0
+
+
+class _DlpackCapsule:
+    """
+    Adapter that lets JAX's ``from_dlpack`` consume a raw DLPack capsule.
+
+    The GPUMD pybind11 wrapper hands out raw ``py::capsule`` objects.  Newer
+    JAX versions (``jax.dlpack.from_dlpack``) only accept objects that expose
+    the ``__dlpack__`` / ``__dlpack_device__`` protocol, so we wrap the
+    capsule in a tiny object that forwards to it.
+    """
+
+    def __init__(self, capsule):
+        self._capsule = capsule
+
+    def __dlpack__(self, stream=None):
+        return self._capsule
+
+    def __dlpack_device__(self):
+        return (_GPUMD_DL_DEVICE_TYPE, _GPUMD_DL_DEVICE_ID)
+
+
+def _from_dlpack(capsule):
+    """Wrap a raw DLPack capsule and hand it to ``jax.dlpack.from_dlpack``."""
+    return from_dlpack(_DlpackCapsule(capsule))
+
 
 class Sampler:
     """
@@ -160,9 +189,9 @@ class Sampler:
         again, otherwise we refresh it every 100 steps.
         """
         sim = self.simulation
-        positions = from_dlpack(sim.get_positions_dlpack()).T
-        velocities = from_dlpack(sim.get_velocities_dlpack()).T
-        forces = from_dlpack(sim.get_forces_dlpack()).T
+        positions = _from_dlpack(sim.get_positions_dlpack()).T
+        velocities = _from_dlpack(sim.get_velocities_dlpack()).T
+        forces = _from_dlpack(sim.get_forces_dlpack()).T
         vel_mass = (velocities, self._cached_masses)
 
         if not self._box_is_constant and timestep % 100 == 0:
@@ -196,11 +225,11 @@ class Sampler:
         sees updated GPU values each step.
         """
         sim = self.simulation
-        positions = from_dlpack(sim.get_positions_dlpack()).T
-        velocities = from_dlpack(sim.get_velocities_dlpack()).T
-        forces = from_dlpack(sim.get_forces_dlpack()).T
-        masses = from_dlpack(sim.get_masses_dlpack())
-        types = from_dlpack(sim.get_types_dlpack())
+        positions = _from_dlpack(sim.get_positions_dlpack()).T
+        velocities = _from_dlpack(sim.get_velocities_dlpack()).T
+        forces = _from_dlpack(sim.get_forces_dlpack()).T
+        masses = _from_dlpack(sim.get_masses_dlpack())
+        types = _from_dlpack(sim.get_types_dlpack())
         vel_mass = (velocities, masses)
         ids = np.arange(types.size)
         h, origin = sim.get_box()
