@@ -1,4 +1,5 @@
 # GPUMD-PySAGES
+[![CI](https://github.com/JaafarMehrez/GPUMD-PySAGES/actions/workflows/ci.yml/badge.svg)](https://github.com/JaafarMehrez/GPUMD-PySAGES/actions/workflows/ci.yml)
 [![DOI](https://zenodo.org/badge/1243030964.svg)](https://doi.org/10.5281/zenodo.20589485)
 
 A GPU-native interface between [GPUMD](https://github.com/brucefan1983/GPUMD) and [PySAGES](https://github.com/SSAGESLabs/PySAGES) for enhanced-sampling molecular dynamics on machine-learning potentials.

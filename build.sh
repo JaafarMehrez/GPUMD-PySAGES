@@ -8,6 +8,11 @@
 # 2. Copies the modified GPUMD core files (with USE_PYSAGES hooks)
 # 3. Copies the pybind11 wrapper files
 # 4. Builds the Python extension module (gpumd.so)
+#
+# Optional environment variables:
+#   MAKE_JOBS=N             Parallel make jobs for the extension build (e.g. 4)
+#   SKIP_PYTHON_INSTALL=1   Build only the extension; skip steps 5-6
+#                           (backend install). Used by CI.
 
 set -e
 
@@ -65,7 +70,19 @@ echo ""
 echo "Step 4/5: Building Python extension module (gpumd.so)..."
 cd "$GPUMD_DIR/src"
 make clean
-make pygpumd
+make ${MAKE_JOBS:+-j$MAKE_JOBS} pygpumd
+
+# Optional early exit: only build the extension, skip the Python-side install.
+# This is used by CI to compile-check the patched GPUMD core and the pybind11
+# wrapper against upstream GPUMD without needing the full JAX/CuPy/PySAGES stack.
+if [ "${SKIP_PYTHON_INSTALL:-0}" = "1" ]; then
+    echo ""
+    echo "=========================================="
+    echo "Extension built successfully: $GPUMD_DIR/src/gpumd.so"
+    echo "Python backend installation skipped (SKIP_PYTHON_INSTALL=1)."
+    echo "=========================================="
+    exit 0
+fi
 
 # --- Step 5: Install PySAGES backend ---
 echo ""
