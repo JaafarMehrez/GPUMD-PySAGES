@@ -2,15 +2,15 @@
     Copyright 2017 Zheyong Fan and GPUMD development team
     This file is part of GPUMD.
     GPUMD is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
+    it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
     GPUMD is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    You should have received a copy of the GNU General Public License
-    along with GPUMD.  If not, see <http://www.gnu.org/licenses/>.
+    GNU Lesser General Public License for more details.
+    You should have received a copy of the GNU Lesser General Public License
+    along with GPUMD.  If not, see <https://www.gnu.org/licenses/>.
 
     Contributions by Jaafar Mehrez
     (Shanghai Jiao Tong University, Shanghai, China;
@@ -23,6 +23,7 @@
 class Force;
 class Integrate;
 class Measure;
+class RunInput;
 
 #include "force/force.cuh"
 #include "integrate/integrate.cuh"
@@ -43,9 +44,12 @@ class Measure;
 class Run
 {
 public:
-  Run();
+  Run(const RunInput& run_input);
 
 #ifdef USE_PYSAGES
+  // Constructor used by the PySAGES Python wrapper: parses run_input_path
+  // but (when skip_run is true) does not execute the "run" commands, so the
+  // MD loop can be driven from Python via execute_run().
   Run(bool skip_run, const std::string& run_input_path);
 
   // ---- PySAGES / external-sampling hook ----
@@ -58,43 +62,47 @@ public:
   GPU_Vector<double> external_bias_per_atom;
   // ------------------------------------------
 
-  // Accessors for Python wrapper
+  // Accessors for the Python wrapper
   Atom& get_atom() { return atom; }
   const Atom& get_atom() const { return atom; }
   Box& get_box() { return box; }
   const Box& get_box() const { return box; }
   double get_time_step() const { return time_step; }
-  int get_number_of_steps() const { return number_of_steps; }
-  void set_number_of_steps(int n) { number_of_steps = n; }
+  int get_number_of_steps() const { return number_of_steps_; }
+  void set_number_of_steps(int n) { number_of_steps_ = n; }
 
   // Execute the MD loop (callable from Python after set_number_of_steps)
   void execute_run();
 #endif
 
 private:
-  void execute_run_in();
-  void perform_a_run();
+  void execute_run_in(const RunInput& run_input);
+  void perform_a_run(const int number_of_steps);
   void compute_force();
-  void parse_one_keyword(std::vector<std::string>& tokens);
+  void parse_one_keyword(
+    const std::vector<std::string>& tokens, const RunInput& run_input);
 
   // keyword parsing functions
-  void parse_neighbor(const char** param, int num_param);
-  void parse_velocity(const char** param, int num_param);
-  void parse_change_box(const char** param, int num_param);
-  void parse_correct_velocity(const char** param, int num_param, const std::vector<Group>& group);
-  void parse_time_step(const char** param, int num_param);
-  void parse_run(const char** param, int num_param);
+  void parse_velocity(const std::vector<std::string>& tokens);
+  void parse_change_box(const std::vector<std::string>& tokens);
+  void parse_correct_velocity(
+    const std::vector<std::string>& tokens, const std::vector<Group>& group);
+  void parse_time_step(const std::vector<std::string>& tokens);
+  void parse_run(const std::vector<std::string>& tokens);
 
 #ifdef USE_PYSAGES
   bool skip_run_commands = false;
-  std::string run_input_file = "run.in";
+  int number_of_steps_ = 0; // number of steps requested by the Python wrapper
 #endif
 
   int number_of_types; // number of atom types
   int has_velocity_in_xyz = 0;
-  int number_of_steps;        // number of steps in a specific run
-  double global_time = 0.0;   // run time of entire simulation (fs)
-  double initial_temperature; // initial temperature for velocity
+  bool has_seen_dftd3_command = false;
+  bool has_seen_kspace_command = false;
+  bool has_replicate_ = false;
+  int replicate_size_[3] = {1, 1, 1};
+  std::string first_potential_filename_;
+  double global_time = 0.0; // run time of entire simulation (fs)
   double time_step = 1.0 / TIME_UNIT_CONVERSION;
   double max_distance_per_step = -1.0;
   Atom atom;

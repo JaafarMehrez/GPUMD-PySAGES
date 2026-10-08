@@ -30,9 +30,21 @@ else # For linux
 # shared Python extension module (gpumd.so) by the pygpumd target.
 CFLAGS = -std=c++14 -O3 $(CUDA_ARCH) -Xcompiler="$(WARN_FLAGS)" -Xcompiler -fPIC
 endif
+ifeq ($(GNEP_TEST_DIAGNOSTICS),1)
+CFLAGS += -DGNEP_TEST_DIAGNOSTICS
+endif
+ifeq ($(GNEP_TEST_FIXED_SCALER),1)
+CFLAGS += -DUSE_FIXED_SCALER
+endif
 INC = -I./
 LDFLAGS = 
 LIBS = -lcublas -lcusolver -lcufft
+NEP_LIBS =
+GNEP_LIBS =
+ifndef OS
+NEP_LIBS += -ldl
+GNEP_LIBS += -lpthread
+endif
 
 # ---- Python / pybind11 configuration (for pygpumd target) ----
 PYGPUMD_SRC = main_gpumd/gpumd_python.cpp
@@ -120,23 +132,29 @@ HEADERS =                         \
 ###########################################################
 # executables
 ###########################################################
-all: gpumd nep 
+all: gpumd nep gpumd_replica
+
+.PHONY: all gpumd_replica clean_replica clean pygpumd
+
+# Keep replica objects separate and share the selected compiler and architecture.
+gpumd_replica:
+	$(MAKE) -C main_replica CC="$(CC)" CUDA_ARCH="$(CUDA_ARCH)"
+
 gpumd: $(OBJ_GPUMD)
 	$(CC) $(LDFLAGS) $^ -o $@ $(LIBS)
 	@echo =================================================
 	@echo The gpumd executable is successfully compiled!
 	@echo =================================================
 nep: $(OBJ_NEP)
-	$(CC) $(LDFLAGS) $^ -o $@ $(LIBS)
+	$(CC) $(LDFLAGS) $^ -o $@ $(LIBS) $(NEP_LIBS)
 	@echo =================================================
 	@echo The nep executable is successfully compiled!
 	@echo =================================================
 gnep: $(OBJ_GNEP)
-	$(CC) $(LDFLAGS) $^ -o $@ $(LIBS)
+	$(CC) $(LDFLAGS) $^ -o $@ $(LIBS) $(GNEP_LIBS)
 	@echo =================================================
 	@echo The gnep executable is successfully compiled!
 	@echo =================================================
-
 
 ############################################################
 #pygpumd: Python extension module for PySAGES integration 
@@ -220,10 +238,12 @@ endif
 ###########################################################
 # clean up
 ###########################################################
-clean:
+clean_replica:
+	$(MAKE) -C main_replica clean
+
+clean: clean_replica
 ifdef OS
 	del /s *.obj *.exp *.lib *.exe
 else
-	rm -f */*.o main_gpumd/*.o gpumd nep gnep gpumd.so
+	rm -f */*.o gpumd nep gnep gpumd.so
 endif
-
