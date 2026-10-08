@@ -278,9 +278,15 @@ void Run::execute_run_in(const RunInput& run_input)
     }
   }
 
+#ifdef USE_PYSAGES
+  if (!skip_run_commands && integrate.has_ensemble()) {
+    PRINT_INPUT_ERROR("The last ensemble is not followed by a run.");
+  }
+#else
   if (integrate.has_ensemble()) {
     PRINT_INPUT_ERROR("The last ensemble is not followed by a run.");
   }
+#endif
 
   print_line_1();
   printf("Finished executing the commands in run.in.\n");
