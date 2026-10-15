@@ -4,7 +4,7 @@
 
 A GPU-native interface between [GPUMD](https://github.com/brucefan1983/GPUMD) and [PySAGES](https://github.com/SSAGESLabs/PySAGES) for enhanced-sampling molecular dynamics on machine-learning potentials.
 
-📝 **Blog post:** [GPUMD-PySAGES: GPU-Native Enhanced Sampling on Machine-Learning Potentials](https://jaafarmehrez.github.io/blog/gpumd-pysages/)
+**Blog post:** [GPUMD-PySAGES: GPU-Native Enhanced Sampling on Machine-Learning Potentials](https://jaafarmehrez.github.io/blog/gpumd-pysages/)
 — zero-copy DLPack exchange, JAX collective variables, and a well-tempered metadynamics example.
 
 ## Overview
